@@ -1,0 +1,26 @@
+spring:
+  liquibase:
+    enabled: true
+    change-log: db/changelog/database.yaml
+  application:
+    name: coursework-e2e-framework
+
+server:
+  port: 9082
+db-scheduler-ui:
+  history: true
+
+
+db-scheduler-log:
+  enabled: true
+  table-name: scheduled_execution_logs
+db-scheduler:
+  enabled: true
+  heartbeat-interval: 1m
+  polling-strategy: LOCK_AND_FETCH
+  table-name: scheduled_tasks
+  immediate-execution-enabled: true
+  polling-interval: 1s
+
+
+

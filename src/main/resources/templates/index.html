@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/index.css" media="all"  >
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        .checkbox-label + span {
+            margin-left: 0.5rem; /* Отступ в 0.5rem (8px) */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>All Tasks</h1>
+    <div class="row align-items-center mb-3">
+        <!-- First Search Box -->
+        <div class="col-md-4 mb-2">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search for task id">
+                <div class="input-group-append">
+                    <div class="input-group-text">
+                        <input type="checkbox" class="checkbox-label" aria-label="Checkbox for following text input">
+                        <span>Exact match</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Second Search Box -->
+        <div class="col-md-4 mb-2">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search for task name">
+                <div class="input-group-append">
+                    <div class="input-group-text">
+                        <input type="checkbox" class="checkbox-label" aria-label="Checkbox for following text input">
+
+
+                        <span>Exact match </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Select Menu -->
+        <div class="col-md-2 mb-2">
+            <select class="form-control">
+                <option value="all">Status: All</option>
+                <!-- Add other options here -->
+            </select>
+        </div>
+        <!-- Refresh Button -->
+        <div class="col-md-2 mb-2">
+            <button class="btn btn-primary" id="refreshButton">
+                Refresh <i class="fa fa-refresh"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="task-list">
+        <div class="task-list-header">
+            <div>Status</div>
+            <div>Task Name</div>
+            <div>Task ID</div>
+            <div>Next Execution Time</div>
+            <div>Actions</div>
+        </div>
+        <div class="accordion" id="accordionFlushExample">
+            <div th:each="task,taskStat : ${taskPage}">
+                <div class="accordion-item">
+                    <div class="accordion-button collapsed" data-bs-toggle="collapse" th:data-bs-target="'#flush-collapse' + ${taskStat.index}" aria-expanded="false"
+                         th:aria-controls="'flush-collapse' + ${taskStat.index}">
+                        <div class="task-list-item">
+                            <div><span class="status-badge" th:text="${task.status}">Scheduled</span></div>
+                            <div th:text="${task.name}">T</div>
+                            <div th:text="${task.id}"></div>
+                            <div th:text="${task.nextExecutionTime}">18 May, 24 06:31</div>
+                            <div class="actions">
+                                <button class="btn btn-run" th:onclick="runTaskName([[${task.name}]], [[${task.id}]])">Run</button>
+                                <button class="btn btn-options" th:onclick="mute([[${task.name}]], [[${task.id}]])">Mute</button>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div th:id="'flush-collapse' + ${taskStat.index}" class="accordion-collapse collapse" th:aria-labelledby="'flush-heading' + ${taskStat.index}" data-bs-parent="#accordionFlushExample">
+                        <div class="">
+                            <p th:text="${task.name}">Details for the task</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+    <nav aria-label="Page navigation example" class="pagination-wrapper">
+        <ul class="pagination justify-content-center"> <!-- Центрируем элементы пагинации -->
+
+
+            <li class="page-item">
+                <a class="page-link" th:href="@{/(page=${taskPage.number - 1})}">Prev</a>
+            </li>
+            <li th:each="pageNumber : ${pageNumbers}"
+                th:class="${pageNumber == taskPage.number + 1} ? 'page-item active' : 'page-item'">
+                <a th:href="@{/(size=${taskPage.size}, page=${pageNumber - 1})}"
+                   th:text="${pageNumber}" class="page-link"></a>
+            </li>
+            <li class="page-item">
+                <a class="page-link"  th:href="@{/(page=${taskPage.number + 1})}">Next</a>
+            </li>
+        </ul>
+    </nav>
+
+</div>
+</body>
+<script>
+
+
+    function mute(id, name){
+        let scheduleTime = new Date(2077, 0, 1, 12, 0, 0).toISOString();
+        reschedule(id, name,  scheduleTime)
+    }
+
+
+
+    function reschedule(id, name, scheduleTime) {
+        fetch('/tasks/rerun', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                'id': id,
+                'name': name,
+                'scheduleTime': scheduleTime
+            })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+        location.reload()
+    }
+
+    function runTaskName(name, id) {
+        let scheduleTime = new Date().toISOString();
+        reschedule(id, name, scheduleTime);
+    }
+</script>
+<script>
+    document.getElementById('refreshButton').addEventListener('click', function () {
+        // Перезагружаем страницу
+        location.reload();
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script>
+</html>

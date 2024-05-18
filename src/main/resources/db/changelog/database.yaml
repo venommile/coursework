@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/scheduler/1.sql
+  - include:
+      file: db/changelog/scheduler/2.sql
+  - include:
+      file: db/changelog/scheduler/3.sql
