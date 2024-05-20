@@ -1,7 +1,9 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc://postgresql://note_app
+    url: jdbc:postgresql://postgres:5432/mydatabase
+    username: myuser
+    password: secret
   jpa:
     show-sql: true
     properties:
