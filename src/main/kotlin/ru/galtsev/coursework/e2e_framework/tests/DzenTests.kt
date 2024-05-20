@@ -9,19 +9,26 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.openqa.selenium.chrome.ChromeOptions
 import ru.galtsev.coursework.e2e_framework.infra.annotation.TestAn
+import java.net.MalformedURLException
 import java.util.concurrent.TimeUnit
 
 
 @TestAn(projectName = "Yandex-tests", timeUnit = TimeUnit.DAYS, delay = 1)
 class DzenTests {
-
     @BeforeEach
+    @Throws(MalformedURLException::class)
     fun setUp() {
-        // Настройки Selenide
+        // Устанавливаем использование удаленного WebDriver
+        Configuration.remote = "http://158.160.167.135:4444//wd/hub"
+
+        // Опции Chrome для запуска headless-режиме
+        val options = ChromeOptions()
+
+        Configuration.browserCapabilities = options
         Configuration.timeout = 10000
     }
-
     @AfterEach
     fun tearDown() {
         // Закрытие браузера после каждого теста

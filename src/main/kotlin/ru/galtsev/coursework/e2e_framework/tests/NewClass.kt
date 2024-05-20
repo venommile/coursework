@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Tags
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.openqa.selenium.chrome.ChromeOptions
 import ru.galtsev.coursework.e2e_framework.infra.annotation.TestAn
 import ru.galtsev.coursework.e2e_framework.infra.config.MetricTestWatcher
 import java.util.concurrent.TimeUnit
@@ -20,8 +21,14 @@ import java.util.concurrent.TimeUnit
 class GoogleTests {
     @BeforeEach
     fun setUp() {
-        Configuration.browser = "chrome"
-        Configuration.headless = true // Отключить GUI для тестов
+        // Устанавливаем использование удаленного WebDriver
+        Configuration.remote = "http://158.160.167.135:4444//wd/hub"
+
+        // Опции Chrome для запуска headless-режиме
+        val options = ChromeOptions()
+
+        Configuration.browserCapabilities = options
+        Configuration.timeout = 10000
     }
 
     @AfterEach

@@ -24,6 +24,7 @@ object MetricTestWatcher : TestWatcher {
 
             val testCase = testCaseContextRepository.findTestCaseByMethodName(method.toString())
             val testCaseContext = testCase.get()
+            val message = cause.message ?: ""
             val history = testCaseHistoryRepository.save(
                 TestCaseHistory(
                     success = false,
@@ -31,7 +32,7 @@ object MetricTestWatcher : TestWatcher {
                         is AssertionError -> ErrorType.ASSERTIONS_ERROR
                         else -> ErrorType.BROKEN_ERROR
                     },
-                    errorMessage = cause.message,
+                    errorMessage = if (message.length > 250) message.substring(0, 250) else message,
                     testCaseContext = testCaseContext
                 )
             )
