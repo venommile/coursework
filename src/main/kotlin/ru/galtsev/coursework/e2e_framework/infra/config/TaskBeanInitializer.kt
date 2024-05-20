@@ -13,6 +13,7 @@ import ru.galtsev.coursework.e2e_framework.core.TestRunner
 import ru.galtsev.coursework.e2e_framework.infra.annotation.TestAn
 import ru.galtsev.coursework.e2e_framework.infra.config.TestSchedulerConfiguration.ScheduleAndNoData
 import java.lang.reflect.Method
+import java.util.*
 import java.util.function.Supplier
 
 abstract class TaskBeanInitializer : ApplicationContextInitializer<GenericApplicationContext> {
@@ -42,16 +43,17 @@ abstract class TaskBeanInitializer : ApplicationContextInitializer<GenericApplic
                 determinedProjectName = projectName
             }
 
-            var name = AnnotationUtils.findAnnotation(method, DisplayName::class.java)?.value
-            if (name?.isBlank() != false) {
-                name = methodName
+            var description = AnnotationUtils.findAnnotation(method, DisplayName::class.java)?.value
+            description = if (description == null) {
+                UUID.randomUUID().toString()
             } else {
-                name += "|||||" + methodName.hashCode()
+                description
             }
 
 
             val task = Tasks.recurringWithPersistentSchedule(
-                name, ScheduleAndNoData::class.java
+                description,
+                ScheduleAndNoData::class.java
             ).execute { _: TaskInstance<ScheduleAndNoData>, _: ExecutionContext? ->
                 TestRunner(methodName, method).run()
             }
@@ -72,6 +74,7 @@ abstract class TaskBeanInitializer : ApplicationContextInitializer<GenericApplic
                             RecurringTaskWithPersistentSchedule::class.java
                         ) as RecurringTaskWithPersistentSchedule<ScheduleAndNoData>,
                         method = method,
+                        description = description,
                         projectName = determinedProjectName
                     )
                 }

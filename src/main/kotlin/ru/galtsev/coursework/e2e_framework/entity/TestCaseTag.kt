@@ -1,28 +1,25 @@
 package ru.galtsev.coursework.e2e_framework.entity
 
-import jakarta.persistence.Column
-import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
 import java.util.*
 
 
-//@Entity
+@Entity
 @Table(name = "test_cases_tags")
-class Tag(
+class TestCaseTag(
 
     @Id
     @Column(name = "tag_id")
     @UuidGenerator(style = UuidGenerator.Style.TIME)
-    var id: UUID,
+    var id: UUID? = null,
 
 
     @Column(name = "name")
     var name: String,
 
 
-    @OneToMany
-    var testCaseContext: TestCaseContext
+    @ManyToMany
+    var testCaseContext: List<TestCaseContext>? = listOf()
 ) {
 }

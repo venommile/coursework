@@ -7,6 +7,7 @@ import ru.galtsev.coursework.e2e_framework.ui.dto.TaskDetailsRequestParams
 import ru.galtsev.coursework.e2e_framework.ui.dto.TaskRequestParams
 import ru.galtsev.coursework.e2e_framework.ui.service.TaskLogic
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 
 @RestController
@@ -42,10 +43,6 @@ class TaskController(private val taskLogic: TaskLogic) {
         taskLogic.runTaskNow(id, name, resultTime)
     }
 
-    @PostMapping("/rerunGroup")
-    fun runAllNow(@RequestParam name: String, @RequestParam onlyFailed: Boolean) {
-        taskLogic.runTaskGroupNow(name, onlyFailed)
-    }
 
     @PostMapping("/delete")
     fun deleteTaskNow(@RequestParam id: String, @RequestParam name: String) {

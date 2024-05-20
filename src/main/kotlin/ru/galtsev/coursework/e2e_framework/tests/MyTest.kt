@@ -5,11 +5,14 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Tags
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import ru.galtsev.coursework.e2e_framework.infra.annotation.TestAn
+import ru.galtsev.coursework.e2e_framework.infra.config.MetricTestWatcher
 import java.util.concurrent.TimeUnit
 
 
-@TestAn(projectName = "kek", timeUnit = TimeUnit.SECONDS, delay = 1000)
+@TestAn(projectName = "kek", timeUnit = TimeUnit.MINUTES, delay = 1)
+@ExtendWith(MetricTestWatcher::class)
 class MyTest {
 
 
@@ -22,6 +25,7 @@ class MyTest {
             Tag("world"),
         ]
     )
+    @DisplayName("some-name")
     fun test() {
 
         println("inside test")

@@ -54,9 +54,9 @@ class TaskCaching {
                 + (if (task.pickedBy != null) "1" else "0"))
     }
 
-    fun getStatusFromCache(taskInstance: TaskInstanceId): String? {
+    fun getStatusFromCache(taskInstance: TaskInstanceId): String {
         val uniqueId = taskInstance.taskName + "_" + taskInstance.id
-        return taskStatusCache[uniqueId]
+        return taskStatusCache[uniqueId]!!
     }
 
 

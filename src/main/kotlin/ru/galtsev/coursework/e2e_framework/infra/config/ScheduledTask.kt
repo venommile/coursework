@@ -7,6 +7,8 @@ import java.lang.reflect.Method
 data class ScheduledTask(
     val schedule: RecurringTaskWithPersistentSchedule<ScheduleAndNoData>,
     val method: Method,
-    val projectName: String
+    val projectName: String,
+    val description: String,
+
 ) {
 }

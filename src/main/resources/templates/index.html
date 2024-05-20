@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Management</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
-    <link rel="stylesheet" href="/css/index.css" media="all"  >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/index.css" media="all">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <style>
@@ -19,43 +20,32 @@
 <div class="container">
     <h1>All Tasks</h1>
     <div class="row align-items-center mb-3">
+
         <!-- First Search Box -->
         <div class="col-md-4 mb-2">
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search for task id">
-                <div class="input-group-append">
-                    <div class="input-group-text">
-                        <input type="checkbox" class="checkbox-label" aria-label="Checkbox for following text input">
-                        <span>Exact match</span>
-                    </div>
-                </div>
+                <input type="text" class="form-control" placeholder="Search for projectName" id="projectName">
             </div>
         </div>
         <!-- Second Search Box -->
         <div class="col-md-4 mb-2">
             <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search for task name">
-                <div class="input-group-append">
-                    <div class="input-group-text">
-                        <input type="checkbox" class="checkbox-label" aria-label="Checkbox for following text input">
-
-
-                        <span>Exact match </span>
-                    </div>
-                </div>
+                <input type="text" class="form-control" placeholder="Search for task name" id="taskName">
             </div>
         </div>
-        <!-- Select Menu -->
+
         <div class="col-md-2 mb-2">
-            <select class="form-control">
-                <option value="all">Status: All</option>
-                <!-- Add other options here -->
+            <select class="form-control" id="tag">
+                <option value="all" selected>Select Tag: All</option>
+                <option th:each="tag : ${tags}" th:text="${tag}"
+                        th:value="${tag.toLowerCase().replace(' ', '')}"></option>
+                <!-- This dynamically adds options from the tags list -->
             </select>
         </div>
         <!-- Refresh Button -->
         <div class="col-md-2 mb-2">
             <button class="btn btn-primary" id="refreshButton">
-                Refresh <i class="fa fa-refresh"></i>
+                Search <i class="fa fa-search"></i>
             </button>
         </div>
     </div>
@@ -64,37 +54,63 @@
         <div class="task-list-header">
             <div>Status</div>
             <div>Task Name</div>
-            <div>Task ID</div>
+            <div>Project name</div>
             <div>Next Execution Time</div>
             <div>Actions</div>
         </div>
         <div class="accordion" id="accordionFlushExample">
             <div th:each="task,taskStat : ${taskPage}">
                 <div class="accordion-item">
-                    <div class="accordion-button collapsed" data-bs-toggle="collapse" th:data-bs-target="'#flush-collapse' + ${taskStat.index}" aria-expanded="false"
+                    <div class="accordion-button collapsed" data-bs-toggle="collapse"
+                         th:data-bs-target="'#flush-collapse' + ${taskStat.index}" aria-expanded="false"
                          th:aria-controls="'flush-collapse' + ${taskStat.index}">
                         <div class="task-list-item">
                             <div><span class="status-badge" th:text="${task.status}">Scheduled</span></div>
                             <div th:text="${task.name}">T</div>
-                            <div th:text="${task.id}"></div>
-                            <div th:text="${task.nextExecutionTime}">18 May, 24 06:31</div>
+                            <div th:text="${task.projectName}"></div>
+                            <div th:text="${task.nextExecutionTime}"></div>
                             <div class="actions">
-                                <button class="btn btn-run" th:onclick="runTaskName([[${task.name}]], [[${task.id}]])">Run</button>
-                                <button class="btn btn-options" th:onclick="mute([[${task.name}]], [[${task.id}]])">Mute</button>
+                                <button class="btn btn-run" th:onclick="runTaskName([[${task.name}]], [[${task.id}]])">
+                                    Run
+                                </button>
+                                <button class="btn btn-options" th:onclick="mute([[${task.name}]], [[${task.id}]])">
+                                    Mute
+                                </button>
                             </div>
 
                         </div>
                     </div>
-                    <div th:id="'flush-collapse' + ${taskStat.index}" class="accordion-collapse collapse" th:aria-labelledby="'flush-heading' + ${taskStat.index}" data-bs-parent="#accordionFlushExample">
-                        <div class="">
-                            <p th:text="${task.name}">Details for the task</p>
+                    <div th:id="'flush-collapse' + ${taskStat.index}" class="accordion-collapse collapse"
+                         th:aria-labelledby="'flush-heading' + ${taskStat.index}"
+                         data-bs-parent="#accordionFlushExample">
+                        <div th:each="history : ${task.taskHistoryList}" class="card mb-3">
+                            <div class="card-body">
+                                <p class="card-title font-weight-bold">Details for the task</p>
+                                <div class="mb-2">
+                                    <span class="font-weight-bold">Success:</span>
+                                    <span th:if="${history.success}" class="text-success">
+                    <i class="fa fa-check" style="color: #1ccc19;"></i> true
+                </span>
+                                    <span th:if="${!history.success}" class="text-danger">
+                    <i class="fa fa-remove" style="color: red;"></i> false
+                </span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="font-weight-bold">Error Message:</span>
+                                    <span th:text="${history.errorMessage != null ? history.errorMessage : 'No errors'}">No errors</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="font-weight-bold">Error Type:</span>
+                                    <span th:text="${history.errorType}">NONE</span>
+                                </div>
+                                <div>
+                                    <span class="font-weight-bold">Execution Time:</span>
+                                    <span th:text="${history.executionTime}">2023-10-01T12:00:00Z</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
         </div>
-
-
 
     </div>
     <nav aria-label="Page navigation example" class="pagination-wrapper">
@@ -110,7 +126,7 @@
                    th:text="${pageNumber}" class="page-link"></a>
             </li>
             <li class="page-item">
-                <a class="page-link"  th:href="@{/(page=${taskPage.number + 1})}">Next</a>
+                <a class="page-link" th:href="@{/(page=${taskPage.number + 1})}">Next</a>
             </li>
         </ul>
     </nav>
@@ -120,14 +136,13 @@
 <script>
 
 
-    function mute(id, name){
+    function mute(id, name) {
         let scheduleTime = new Date(2077, 0, 1, 12, 0, 0).toISOString();
-        reschedule(id, name,  scheduleTime)
+        reschedule(id, name, scheduleTime)
     }
 
 
-
-    function reschedule(id, name, scheduleTime) {
+    async function reschedule(id, name, scheduleTime) {
         fetch('/tasks/rerun', {
             method: 'POST',
             headers: {
@@ -151,20 +166,43 @@
             .catch(error => {
                 console.error('Error:', error);
             });
+        setTimeout(() => { location.reload() }, 500);
 
-        location.reload()
     }
 
-    function runTaskName(name, id) {
+    function runTaskName(id, name, ) {
         let scheduleTime = new Date().toISOString();
         reschedule(id, name, scheduleTime);
     }
 </script>
+
 <script>
     document.getElementById('refreshButton').addEventListener('click', function () {
         // Перезагружаем страницу
-        location.reload();
+        var tag = document.getElementById('tag').value;
+
+
+        var status = document.getElementById('status')?.value;
+
+        var taskName = document.getElementById('taskName').value;
+        var projectName = document.getElementById('projectName').value;
+
+
+
+        // Формируем новый URL с параметрами
+        var newUrl = window.location.pathname +
+            `?tag=${encodeURIComponent(tag)}` +
+            `&status=${encodeURIComponent(status)}` +
+            `&projectName=${encodeURIComponent(projectName)}` +
+            `&taskName=${encodeURIComponent(taskName)}`
+
+        ;
+
+        // Переходим на новый URL
+        window.location.href = newUrl;
     });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"
+        crossorigin="anonymous"></script>
 </html>

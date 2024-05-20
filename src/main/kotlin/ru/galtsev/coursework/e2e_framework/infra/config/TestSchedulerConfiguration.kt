@@ -11,8 +11,11 @@ import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.web.servlet.view.InternalResourceViewResolver
+import ru.galtsev.coursework.e2e_framework.entity.TestCaseContext
+import ru.galtsev.coursework.e2e_framework.entity.TestCaseTag
 import ru.galtsev.coursework.e2e_framework.infra.annotation.TestAn
+import ru.galtsev.coursework.e2e_framework.repository.TagRepository
+import ru.galtsev.coursework.e2e_framework.repository.TestCaseContextRepository
 import java.io.Serializable
 import java.util.concurrent.TimeUnit
 
@@ -20,7 +23,8 @@ import java.util.concurrent.TimeUnit
 @Configuration
 class TestSchedulerConfiguration(
     private val scheduler: Scheduler,
-
+    private val tagRepository: TagRepository,
+    private val testCaseContextRepository: TestCaseContextRepository,
     private val tasks: MutableList<ScheduledTask>,
     private val jdbcTemplate: JdbcTemplate
 ) {
@@ -61,10 +65,51 @@ class TestSchedulerConfiguration(
             tags?.value?.map { it.value }?.let { resultTags.addAll(it) }
 
 
-            val fixedDelayOnMethod = AnnotationUtils.findAnnotation(scheduledTask.method, TestAn::class.java)
+            var projectName: String = ""
+            val testAnnotation = AnnotationUtils.findAnnotation(scheduledTask.method, TestAn::class.java)
+
+            projectName = if (testAnnotation?.projectName?.isNotBlank() == true) {
+                val resultAn =
+                    AnnotationUtils.findAnnotation(scheduledTask.method.declaringClass, TestAn::class.java)
+
+                if (resultAn?.projectName?.isNotBlank() == true) {
+                    resultAn.projectName
+                } else {
+                    throw RuntimeException("необходимо задать projectName")
+                }
+            } else {
+                scheduledTask.projectName
+            }
 
 
-            val (timeUnit: TimeUnit, value: Int) = getDelayValue(fixedDelayOnMethod, scheduledTask)
+            val testCaseContext = testCaseContextRepository.findTestCaseContextByTaskNameAndTaskId(
+                scheduledTask.description,
+                scheduledTask.method.toString()
+            )
+
+
+            println(testCaseContext.isEmpty)
+            val tagsFromDb = resultTags.map {
+                testCaseTag(it)
+            }
+
+            if (testCaseContext.isEmpty) {
+                testCaseContextRepository.save(
+                    TestCaseContext(
+                        taskId = scheduledTask.method.toString(),
+                        taskName = scheduledTask.description,
+                        projectName = projectName,
+                        description = "",
+                        testCaseTags = tagsFromDb,
+                        methodName = scheduledTask.method.toString(),
+                    )
+                )
+            }
+
+
+
+
+            val (timeUnit: TimeUnit, value: Int) = getDelayValue(testAnnotation, scheduledTask)
 
 
 
@@ -80,6 +125,18 @@ class TestSchedulerConfiguration(
                 )
             )
         }
+    }
+
+    private fun testCaseTag(it: String): TestCaseTag {
+        val tagByNameIgnoreCase = tagRepository.findTagByNameIgnoreCase(it)
+        if (tagByNameIgnoreCase.isEmpty) {
+            return tagRepository.save(
+                TestCaseTag(
+                    name = it
+                )
+            )
+        }
+        return tagByNameIgnoreCase.get()
     }
 
     private fun getDelayValue(

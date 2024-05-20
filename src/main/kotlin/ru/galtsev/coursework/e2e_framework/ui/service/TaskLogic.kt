@@ -1,5 +1,6 @@
 package ru.galtsev.coursework.e2e_framework.ui.service
 
+
 import com.github.kagkarlsson.scheduler.ScheduledExecution
 import com.github.kagkarlsson.scheduler.Scheduler
 import com.github.kagkarlsson.scheduler.task.TaskInstanceId
@@ -7,23 +8,27 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import ru.galtsev.coursework.e2e_framework.ui.dto.*
-import ru.galtsev.coursework.e2e_framework.ui.mapper.TaskMapper
+import ru.galtsev.coursework.e2e_framework.ui.mapper.QueryUtils
+import ru.galtsev.coursework.e2e_framework.ui.mapper.TaskMapper.groupTasks
+import ru.galtsev.coursework.e2e_framework.ui.mapper.TaskMapper.mapAllExecutionsToTaskModelUngrouped
 import java.time.Instant
 import java.util.function.Consumer
 import java.util.stream.Collectors
 
-
 @Service
 class TaskLogic(private val scheduler: Scheduler, private val caching: TaskCaching) {
-    private val showData: Boolean = true
+
+
+    private var showData: Boolean = true
 
     init {
         scheduler.start()
+        this.showData = true
     }
 
     fun runTaskNow(taskId: String, taskName: String, scheduleTime: Instant?) {
         val scheduledExecutionOpt =
-            scheduler.getScheduledExecution(TaskInstanceId.of(taskName, taskId))
+            scheduler.getScheduledExecution(TaskInstanceId.of(taskId, taskName ))
 
         if (scheduledExecutionOpt.isPresent && !scheduledExecutionOpt.get().isPicked) {
             scheduler.reschedule(
@@ -38,27 +43,7 @@ class TaskLogic(private val scheduler: Scheduler, private val caching: TaskCachi
         }
     }
 
-    fun runTaskGroupNow(taskName: String, onlyFailed: Boolean) {
-        caching
-            .getExecutionsFromCacheOrDB(false, scheduler)
-            .forEach {
-                Consumer { execution: ScheduledExecution<Any?> ->
-                    if (((!onlyFailed || execution.consecutiveFailures > 0)
-                                && (taskName == execution.taskInstance.taskName))
-                    ) {
-                        try {
-                            runTaskNow(
-                                execution.taskInstance.id,
-                                execution.taskInstance.taskName,
-                                Instant.now()
-                            )
-                        } catch (e: ResponseStatusException) {
-                            println("Failed to run task: " + e.message)
-                        }
-                    }
-                }
-            }
-    }
+
 
     fun deleteTask(taskId: String, taskName: String) {
         val scheduledExecutionOpt =
@@ -76,46 +61,51 @@ class TaskLogic(private val scheduler: Scheduler, private val caching: TaskCachi
     }
 
     fun getAllTasks(params: TaskRequestParams): GetTasksResponse {
-        val executions =
+        val executions: List<ScheduledExecution<Any>> =
             caching.getExecutionsFromCacheOrDB(params.isRefresh, scheduler)
 
-        var tasks = TaskMapper.mapAllExecutionsToTaskModelUngrouped(executions)
+        var tasks = mapAllExecutionsToTaskModelUngrouped(executions)
 
-//        tasks =
-//            QueryUtils.searchByTaskName(
-//                tasks, params.searchTermTaskName, params.isTaskNameExactMatch
-//            )
-//        tasks =
-//            QueryUtils.searchByTaskInstance(
-//                tasks, params.searchTermTaskInstance, params.isTaskInstanceExactMatch
-//            )
+        tasks =
+            QueryUtils.searchByTaskName(
+                tasks, params.searchTermTaskName, params.isTaskNameExactMatch
+            )
+        tasks =
+            QueryUtils.searchByTaskInstance(
+                tasks, params.searchTermTaskInstance, params.isTaskInstanceExactMatch
+            )
         if (!showData) {
-            tasks.forEach(Consumer { e: TaskModel -> e.taskData = listOf() })
+            tasks.forEach(Consumer { e: TaskModel ->
+                e.taskData = listOf()
+            })
         }
-        tasks = TaskMapper.groupTasks(tasks)
-//        tasks =
-//            QueryUtils.sortTasks(
-//                QueryUtils.filterTasks(tasks, params.filter), params.sorting, params.isAsc
-//            )
-//        val pagedTasks =
-//            QueryUtils.paginate(tasks, params.pageNumber, params.size)
-        val pagedTasks = listOf<TaskModel>()
+        tasks = groupTasks(tasks)
+        tasks =
+            QueryUtils.sortTasks(
+                QueryUtils.filterTasks(tasks, params.filter), params.sorting, params.isAsc
+            )
+        val pagedTasks =
+            QueryUtils.paginate(tasks, params.pageNumber, params.size)
         return GetTasksResponse(tasks.size, pagedTasks, params.size)
     }
 
     fun getTask(params: TaskDetailsRequestParams): GetTasksResponse {
-        val executions =
+        val executions: List<ScheduledExecution<Any>> =
             caching.getExecutionsFromCacheOrDB(params.isRefresh, scheduler)
 
         var tasks =
             if (params.taskId != null
-            ) TaskMapper.mapAllExecutionsToTaskModelUngrouped(executions).stream()
-                .filter { task: TaskModel ->
-                    ((task.taskName == params.taskName) && (task.taskInstance?.get(0) == params.taskId))
-                }
+            ) mapAllExecutionsToTaskModelUngrouped(executions).stream()
+                .filter(
+                    { task: TaskModel ->
+                        ((task.taskName == params.taskName) && (task.taskInstance!!.get(
+                            0
+                        ) == params.taskId))
+                    })
                 .collect(Collectors.toList())
-            else TaskMapper.mapAllExecutionsToTaskModelUngrouped(executions).stream()
-                .filter { task: TaskModel -> (task.taskName == params.taskName) }
+            else mapAllExecutionsToTaskModelUngrouped(executions).stream()
+                .filter(
+                    { task: TaskModel -> (task.taskName == params.taskName) })
                 .collect(Collectors.toList())
         if (tasks.isEmpty()) {
             throw ResponseStatusException(
@@ -126,38 +116,35 @@ class TaskLogic(private val scheduler: Scheduler, private val caching: TaskCachi
                         + params.taskId
             )
         }
-//        tasks =
-//            QueryUtils.searchByTaskName(
-//                tasks, params.searchTermTaskName, params.isTaskNameExactMatch
-//            )
-//        tasks =
-//            QueryUtils.searchByTaskInstance(
-//                tasks, params.searchTermTaskInstance, params.isTaskInstanceExactMatch
-//            )
-//        tasks =
-//            QueryUtils.sortTasks(
-//                QueryUtils.filterTasks(tasks, params.filter), params.sorting, params.isAsc
-//            )
-//        if (!showData) {
-//            val list: ArrayList<Any> = listOf()
-//            tasks.forEach(Consumer { e: TaskModel -> e.taskData = list })
-//        }
+        tasks =
+            QueryUtils.searchByTaskName(
+                tasks, params.searchTermTaskName, params.isTaskNameExactMatch
+            )
+        tasks =
+            QueryUtils.searchByTaskInstance(
+                tasks, params.searchTermTaskInstance, params.isTaskInstanceExactMatch
+            )
+        tasks =
+            QueryUtils.sortTasks(
+                QueryUtils.filterTasks(tasks, params.filter), params.sorting, params.isAsc
+            )
+        if (!showData) {
+            val list: List<Any> = listOf()
+            tasks.forEach(Consumer { e: TaskModel -> e.taskData = list })
+        }
 
-//        val pagedTasks =
-//            QueryUtils.paginate(tasks, params.pageNumber, params.size)
-        val pagedTasks: List<TaskModel> = listOf()
+        val pagedTasks =
+            QueryUtils.paginate(tasks, params.pageNumber, params.size)
         return GetTasksResponse(tasks.size, pagedTasks, params.size)
     }
 
     fun pollTasks(params: TaskDetailsRequestParams): PollResponse {
-//        val allTasks =
-//            QueryUtils.filterExecutions(
-//                caching.getExecutionsFromDBWithoutUpdatingCache(scheduler),
-//                TaskRequestParams.TaskFilter.ALL,
-//                params.taskName
-//            )
-
-        val allTasks = listOf<ScheduledExecution<Any?>>()
+        val allTasks =
+            QueryUtils.filterExecutions(
+                caching.getExecutionsFromDBWithoutUpdatingCache(scheduler),
+                TaskRequestParams.TaskFilter.ALL,
+                params.taskName
+            )
 
         val newTaskNames: MutableSet<String> = HashSet()
         val newFailureTaskNames: MutableSet<String> = HashSet()
@@ -166,10 +153,10 @@ class TaskLogic(private val scheduler: Scheduler, private val caching: TaskCachi
         val stoppedFailing = 0
         val finishedRunning = 0
 
-        for (task: ScheduledExecution<Any?> in allTasks) {
+        for (task: ScheduledExecution<Any> in allTasks) {
             val taskName = task.taskInstance.taskName
             val status = getStatus(task)
-            val cachedStatus = caching.getStatusFromCache(task.taskInstance)
+            val cachedStatus: String = caching.getStatusFromCache(task.taskInstance)
 
             if (cachedStatus == null) {
                 handleNewTask(
@@ -245,7 +232,7 @@ class TaskLogic(private val scheduler: Scheduler, private val caching: TaskCachi
         if (cachedStatus[1] == '1' && status[1] == '0') finishedRunning++
     }
 
-    private fun getStatus(task: ScheduledExecution<Any?>): String {
+    private fun getStatus(task: ScheduledExecution<Any>): String {
         return ((if (task.consecutiveFailures > 0) "1" else "0")
                 + (if (task.pickedBy != null) "1" else "0"))
     }
