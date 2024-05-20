@@ -9,13 +9,16 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.chrome.ChromeOptions
 import ru.galtsev.coursework.e2e_framework.infra.annotation.TestAn
+import ru.galtsev.coursework.e2e_framework.infra.config.MetricTestWatcher
 import java.net.MalformedURLException
 import java.util.concurrent.TimeUnit
 
 
 @TestAn(projectName = "Yandex-tests", timeUnit = TimeUnit.DAYS, delay = 1)
+@ExtendWith(MetricTestWatcher::class)
 class DzenTests {
     @BeforeEach
     @Throws(MalformedURLException::class)
