@@ -71,14 +71,14 @@ class StartController(
 
             val status = if (task.executionTime!![0].isBefore(
                     LocalDateTime.of(2060, 1, 1, 1, 1, 1)
-                        .toInstant(ZoneOffset.UTC)
+                        .atZone(ZoneId.of("Europe/Moscow")).toInstant()
                 )
             ) "Scheduled" else "Muted"
 
             val name = task.taskName!!
 
             val id = task.taskInstance!![0]
-            val nextExecutionTime = task.executionTime!![0]
+            val nextExecutionTime = task.executionTime!![0].atZone(ZoneId.of("Europe/Moscow")).toInstant()
             val context = testCaseContextRepository.findTestCaseContextByTaskNameAndTaskId(name, id).orElseThrow()
             val tags = context.testCaseTags.map { it.name }
 
@@ -103,7 +103,7 @@ class StartController(
                                 success = it.success,
                                 errorMessage = it.errorMessage,
                                 errorType = it.errorType?.name ?: "без ошибок",
-                                executionTime = formatter.format(it.executionTime)
+                                executionTime = formatter.format(it.executionTime.atZone(ZoneId.of("Europe/Moscow")))
                             )
                         }
                     )
