@@ -1,4 +1,14 @@
 services:
+  app:
+    image: my-spring-boot-app:latest
+    container_name: spring_boot_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
   postgres:
     image: 'postgres:latest'
     environment:

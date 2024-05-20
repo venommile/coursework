@@ -1,4 +1,7 @@
 spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc://postgresql://note_app
   jpa:
     show-sql: true
     properties:

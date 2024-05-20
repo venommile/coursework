@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit
 
 @TestAn(projectName = "google-tests", timeUnit = TimeUnit.DAYS, delay = 1)
 @ExtendWith(MetricTestWatcher::class)
-
 class GoogleTests {
     @BeforeEach
     fun setUp() {

@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
+import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import ru.galtsev.coursework.e2e_framework.repository.TagRepository
@@ -20,7 +21,7 @@ import java.time.format.DateTimeFormatter
 
 val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     .withZone(ZoneId.systemDefault())
-
+@CrossOrigin
 @Controller
 class StartController(
     private val tagRepository: TagRepository,

@@ -1,6 +1,7 @@
 package ru.galtsev.coursework.e2e_framework.tests
 
 import io.kotest.matchers.shouldBe
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Tags
@@ -20,8 +21,6 @@ class MyTest {
     @Tags(
         value = [
             Tag("hello"),
-
-
             Tag("world"),
         ]
     )
@@ -29,7 +28,9 @@ class MyTest {
     fun test() {
 
         println("inside test")
-        true shouldBe false
+        assertThat(true).isFalse().withFailMessage(
+         "Кастомная информация об ошибке"
+        )
     }
 
 
