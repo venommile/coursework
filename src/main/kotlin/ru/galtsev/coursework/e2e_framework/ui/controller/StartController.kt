@@ -77,7 +77,7 @@ class StartController(
             val name = task.taskName!!
 
             val id = task.taskInstance!![0]
-            val nextExecutionTime = task.executionTime!![0].atZone(ZoneId.of("Europe/Moscow")).toInstant()
+            val nextExecutionTime = task.executionTime!![0].atZone(ZoneId.of("Europe/Moscow")).plusHours(3).toInstant()
             val context = testCaseContextRepository.findTestCaseContextByTaskNameAndTaskId(name, id).orElseThrow()
             val tags = context.testCaseTags.map { it.name }
 
@@ -102,7 +102,9 @@ class StartController(
                                 success = it.success,
                                 errorMessage = it.errorMessage,
                                 errorType = it.errorType?.name ?: "без ошибок",
-                                executionTime = formatter.format(it.executionTime.atZone(ZoneId.of("Europe/Moscow")))
+                                executionTime = formatter.format(
+                                    it.executionTime.atZone(ZoneId.of("Europe/Moscow")).plusHours(3)
+                                )
                             )
                         }
                     )
