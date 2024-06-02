@@ -19,4 +19,4 @@ COPY --from=builder /home/build/project/snapshot-dependencies/ ./
 COPY --from=builder /home/build/project/spring-boot-loader/ ./
 COPY --from=builder /home/build/project/application/ ./
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["java","-Duser.timezone=Europe/Moscow", "org.springframework.boot.loader.launch.JarLauncher"]

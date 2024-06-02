@@ -3,12 +3,7 @@ package ru.galtsev.coursework.e2e_framework.tests
 import com.codeborne.selenide.Configuration
 import com.codeborne.selenide.Selenide
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Tags
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.openqa.selenium.chrome.ChromeOptions
 import ru.galtsev.coursework.e2e_framework.infra.annotation.TestAn
@@ -22,7 +17,7 @@ class GoogleTests {
     @BeforeEach
     fun setUp() {
         // Устанавливаем использование удаленного WebDriver
-        Configuration.remote = "http://158.160.167.135:4444//wd/hub"
+        Configuration.remote = "http://158.160.160.115:4444/wd/hub"
 
         // Опции Chrome для запуска headless-режиме
         val options = ChromeOptions()

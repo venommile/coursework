@@ -24,7 +24,7 @@ class DzenTests {
     @Throws(MalformedURLException::class)
     fun setUp() {
         // Устанавливаем использование удаленного WebDriver
-        Configuration.remote = "http://158.160.167.135:4444//wd/hub"
+        Configuration.remote = "http://158.160.160.115:4444/wd/hub"
 
         // Опции Chrome для запуска headless-режиме
         val options = ChromeOptions()
