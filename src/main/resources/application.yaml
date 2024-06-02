@@ -24,7 +24,7 @@ db-scheduler-ui:
 
 
 db-scheduler-log:
-  enabled: true
+  enabled: false
   table-name: scheduled_execution_logs
 db-scheduler:
   enabled: true
